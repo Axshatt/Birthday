@@ -2,7 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join, extname } from "node:path";
 const root = "dist";
-let html = await readFile(join(root, "index.html"), "utf8");
+let html = await readFile(join(root, "postcard.html"), "utf8");
 const script = html.match(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/);
 const style = html.match(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/);
 if (!script || !style) throw new Error("Missing postcard build entry");
@@ -17,3 +17,6 @@ const mime = {".webp":"image/webp",".png":"image/png",".wav":"audio/wav",".ttf":
 const assets = Object.fromEntries(await Promise.all(paths.map(async path => [path,"data:"+mime[extname(path)]+";base64,"+(await readFile(join(root,path))).toString("base64")])));
 const standalone = html.replace("./art/berry.png",assets["art/berry.png"]).replace("<head>",()=>"<head><script>window.postcardAssets="+JSON.stringify(assets)+"</script>");
 await writeFile(join(root,"Birthday-Postcard.html"),standalone);
+
+// Branch-based Pages serves the repository root. Use the existing public assets there.
+await writeFile("index.html", html.replace("<head>", '<head><base href="./public/">'));
