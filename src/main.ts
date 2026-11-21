@@ -1,7 +1,7 @@
 import "./style.css";
 import { gsap } from "gsap";
 import { config as c } from "./config";
-import { play, type Mood } from "./game";
+
 const asset = (path: string) => import.meta.env.BASE_URL + path;
 const esc = (s: string) =>
   s.replace(
@@ -14,25 +14,10 @@ const esc = (s: string) =>
 const $ = <T extends HTMLElement = HTMLElement>(s: string) =>
   document.querySelector<T>(s)!;
 let muted = false,
-  high = 0,
-  unlocked = 0,
   taps = 0,
   tapTime = 0,
   stop = () => {},
   epoch = 0;
-try {
-  high = Number(localStorage.getItem("berry-high")) || 0;
-  unlocked = Math.min(
-    c.memoryCards.length,
-    Number(localStorage.getItem("berry-cards")) || 0,
-  );
-} catch {}
-function save() {
-  try {
-    localStorage.setItem("berry-high", String(high));
-    localStorage.setItem("berry-cards", String(unlocked));
-  } catch {}
-}
 const sounds = new Map<string, HTMLAudioElement>();
 function sound(name: string) {
   if (muted) return;
@@ -44,8 +29,7 @@ function sound(name: string) {
   a.currentTime = 0;
   void a.play().catch(() => {});
 }
-const face = (m: Mood = "happy", cl = "") =>
-  `<button class="face ${cl}" aria-label="Strawberry reaction cam"><img src="${asset("face/" + m + ".png")}" alt="Strawberry"></button>`;
+const face = () => `<button class="face sender" aria-label="Your Strawberry"><img src="${asset("photos/strawberry.webp")}" alt="Strawberry"></button>`;
 document.addEventListener(
   "error",
   (e) => {
@@ -55,23 +39,6 @@ document.addEventListener(
   },
   true,
 );
-function reaction(m: Mood) {
-  const f = $(".face");
-  if (!f) return;
-  const img = f.querySelector("img");
-  if (img) img.src = asset("face/" + m + ".png");
-  gsap.fromTo(
-    f,
-    { scaleX: 1.12, scaleY: 0.8 },
-    {
-      scaleX: 1,
-      scaleY: 1,
-      duration: 0.4,
-      ease: "elastic.out(1,.45)",
-      overwrite: true,
-    },
-  );
-}
 function burst(x = innerWidth / 2, y = innerHeight * 0.45, berries = false) {
   for (let i = 0; i < 32; i++) {
     const p = document.createElement("i");
@@ -115,13 +82,13 @@ document.addEventListener("click", (e) => {
     taps = 0;
     const r = f.getBoundingClientRect();
     burst(r.left + r.width / 2, r.top, true);
-    toast("Secret unlocked: you are my favourite player. 🍓");
+    toast("P.S. I would pick you as my friend all over again. 🍓");
   }
 });
 const speaker =
   '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6h3l4-3v10l-4-3H2zM11 5q3 3 0 6m2-8q5 5 0 10"/></svg>';
 $("#app").innerHTML =
-  `<header><div class="brand"><img src="${asset("art/berry.png")}" alt="">BERRY ARCADE</div><div class="tools"><span class="tag"><i class="led"></i> PLAYER 01</span><button id="sound"></button></div></header><main></main><footer><span>MADE WITH <b class="heart">♥</b> BY ${esc(c.nickname.toUpperCase())}</span><span>BIRTHDAY EDITION · V1.0</span></footer>`;
+  `<header><div class="brand"><img src="${asset("art/berry.png")}" alt="">BERRY POST</div><div class="tools"><span class="tag"><i class="led"></i> BIRTHDAY MAIL</span><button id="sound"></button></div></header><main></main><footer><span>MADE WITH <b class="heart">♥</b> BY ${esc(c.nickname.toUpperCase())}</span><span>SEALED WITH A WISH</span></footer>`;
 function soundLabel() {
   const b = $("#sound");
   b.innerHTML = speaker + (muted ? "SOUND OFF" : "SOUND ON");
@@ -161,95 +128,14 @@ void pixelFont
   .load()
   .then((f) => document.fonts.add(f))
   .catch(() => {});
-const cabinet = `<div class="cabinet"><div class="cab-head"><span>✦ BERRY SYSTEM</span><span class="dots">● ● ●</span></div><div class="screen poster"><span class="worldtag mono">★ BIRTHDAY EDITION ★</span><h1>${esc(c.friendName.toUpperCase())}'S<span>BIRTHDAY</span><span>RESCUE</span></h1></div><div class="scene-foot"><span class="power"><i class="led"></i>POWER</span><i class="vents"></i></div></div>`;
-const guide = `<section class="guide"><div><h3>HOW TO PLAY</h3><small>Your pocket field guide</small></div><div class="item"><span class="ico">🍓</span><div><b>Catch treats</b><small>Rack up points</small></div></div><div class="item"><span class="ico">⏰</span><div><b>Dodge trouble</b><small>Keep your hearts</small></div></div><div class="item"><span class="ico">🎁</span><div><b>Unlock gifts</b><small>Find memories</small></div></div></section>`;
-const lock =
-  '<svg viewBox="0 0 24 26" shape-rendering="crispEdges" aria-hidden="true"><path fill="#29283c" d="M6 10V5h2V2h8v2h2v6h3v14h-2v1H4v-2H3V10zm3 0h6V5H9z"/><path fill="#ffbf58" d="M5 12h14v10H5z"/><path fill="#ffdd86" d="M5 12h14v2H7v6H5z"/><path fill="#bb763d" d="M17 14h2v8H6v-2h11z"/><path fill="#2c2940" d="M10 14h4v4h-1v2h-2v-2h-1z"/></svg>';
-function gate() {
-  show(
-    "gate",
-    `<div class="layout">${cabinet}<section class="panel"><span class="tagpill">◆ PLAYER GATE</span><div class="lock">${lock}</div><h2>Unlock the<br>arcade</h2><p class="question">${esc(c.unlockQuestion)}</p><form><label class="mono label" for="answer">Your answer</label><input class="input" id="answer" placeholder="Type your answer…" autocomplete="off" required><div class="error" aria-live="polite"></div><button class="primary">Unlock game <span>→</span></button></form><p class="note">♡ &nbsp; A little birthday quest, just for you.</p></section></div>${guide}`,
-  );
-  $("form").onsubmit = (e) => {
-    e.preventDefault();
-    if (
-      c.unlockAnswer.some(
-        (a) =>
-          a.trim().toLowerCase() ===
-          $<HTMLInputElement>("#answer").value.trim().toLowerCase(),
-      )
-    ) {
-      sound("pop");
-      start();
-    } else {
-      $(".error").textContent =
-        c.roastLines[Math.floor(Math.random() * c.roastLines.length)];
-      gsap.fromTo(
-        "form",
-        { x: -5 },
-        {
-          x: 5,
-          repeat: 4,
-          yoyo: true,
-          duration: 0.055,
-          onComplete: () => {
-            gsap.set("form", { x: 0 });
-          },
-        },
-      );
-    }
-  };
-}
-function start() {
-  show(
-    "start",
-    `<div class="layout">${cabinet}<section class="panel"><span class="tagpill">★ PLAYER READY</span><div class="balloons">🎈 🎈</div>${face()}<h2>Happy Birthday, ${esc(c.friendName)}!</h2><p>Catch ${c.targetScore} points to rescue your birthday surprise.</p>${btn("play", "▶ Play")}<p class="note">High score · ${high}</p></section></div>${guide}`,
-  );
-  gsap.to(".balloons", { y: -8, yoyo: true, repeat: 4, duration: 0.6 });
-  gsap.fromTo(
-    ".face",
-    { rotation: -8 },
-    { rotation: 8, yoyo: true, repeat: 3, duration: 0.2 },
-  );
-  burst();
-  on("play", game);
-}
-function game() {
-  show(
-    "game",
-    `<section class="wide"><div class="hud mono"></div><div class="playfield"><canvas class="game" aria-label="Catch falling treats with the basket"></canvas>${face("happy", "cam")}</div><p class="controls">↔ Drag or use arrow keys to move</p></section>`,
-  );
-  stop = play($(".game"), $(".hud"), {
-    react: reaction,
-    sound,
-    memory: () => {
-      const card = c.memoryCards[unlocked];
-      if (card) {
-        unlocked++;
-        save();
-        toast("Memory unlocked · " + card.caption, card.image);
-      }
-    },
-    finish: (won, score) => {
-      high = Math.max(high, score);
-      save();
-      if (won) {
-        sound("cheer");
-        candles();
-      } else {
-        show(
-          "over",
-          `<section class="wide">${face("crying")}<h2>Seriously? Try again.</h2><p>Score ${score} · Best ${high}</p>${btn("retry", "↻ Retry")}</section>`,
-        );
-        on("retry", game);
-      }
-    },
-  });
+function postcard() {
+  show("postcard", `<div class="postcard"><figure class="photocard"><div class="cardline mono"><span>✦ BERRY POST</span><span>♥ ♥ ♥</span></div><div class="portrait-window"><img class="portrait" src="${asset("photos/shivangi.webp")}" alt="Shivangi in a white floral dress"><span class="photo-spark" aria-hidden="true">✦</span></div><figcaption>the birthday girl <span>♡</span></figcaption></figure><section class="wish"><span class="postage" aria-hidden="true"><img src="${asset("art/berry.png")}" alt=""></span><div class="mono to">TO · ${esc(c.friendName.toUpperCase())}</div><h1>HAPPY<br><em>BIRTHDAY,</em><br>${esc(c.friendName.toUpperCase())}!</h1><p class="intro">Of all the nicknames in the world, you gave me Strawberry. So of course your birthday card had to come with a little berry on it.</p><div class="signature">${face()}<div><small class="mono">With love,</small><strong>Your ${esc(c.nickname)}</strong></div></div><div class="wish-actions">${btn("read","Read my letter →")}${btn("candles","Make a wish","secondary")}</div></section></div>`);
+  on("read",final);on("candles",candles)
 }
 function candles() {
   show(
     "candles",
-    `<section class="wide"><span class="tagpill">★ BIRTHDAY RESCUED</span><h2>Make a wish${c.age ? " for " + c.age : ""}!</h2><div class="cake" aria-label="Birthday cake with lit candles"><img src="${asset("art/cake-lit.png")}" alt=""></div><p id="micstatus" role="status">Blow out the candles with your microphone, or tap below.</p><div class="row">${btn("mic", "Use microphone")}${btn("blow", "Tap to blow", "secondary")}</div></section>`,
+    `<section class="wide"><span class="tagpill">★ BIRTHDAY CANDLES</span><h2>Make a wish${c.age ? " for " + c.age : ""}!</h2><div class="cake" aria-label="Birthday cake with lit candles"><img src="${asset("art/cake-lit.png")}" alt=""></div><p id="micstatus" role="status">Blow out the candles with your microphone, or tap below.</p><div class="row">${btn("mic", "Use microphone")}${btn("blow", "Tap to blow", "secondary")}</div></section>`,
   );
   let stream: MediaStream | undefined,
     ctx: AudioContext | undefined,
@@ -399,18 +285,7 @@ function gift() {
   on("accessible", reveal);
 }
 function final() {
-  show(
-    "final",
-    `<section class="wide">${face()}<h2>Dear ${esc(c.friendName)},</h2><p class="letter">${esc(c.birthdayMessage)}</p><p><b>${esc(c.finalMessage)}</b></p><div class="row">${wa("Send a wish back", "Best birthday site ever, Strawberry")}${btn("mem", "Memories", "secondary")}${btn("replay", "Replay", "secondary")}</div></section>`,
-  );
-  on("replay", start);
-  on("mem", gallery);
+  show("letter", `<article class="wide note-paper"><span class="tagpill">♥ A LETTER FOR YOU</span><h2>Dear ${esc(c.friendName)},</h2><p class="letter">${esc(c.birthdayMessage)}</p><div class="signature">${face()}<strong>${esc(c.finalMessage)}</strong></div><div class="row">${btn("wish","Make a wish →")}${wa("Send a wish back","Best birthday site ever, Strawberry")}${btn("home","Back to card","secondary")}</div></article>`);
+  on("wish",candles);on("home",postcard)
 }
-function gallery() {
-  show(
-    "gallery",
-    `<section class="wide"><h2>Memories</h2><p>${unlocked} of ${c.memoryCards.length} unlocked · Catch gift boxes to collect cards.</p><div class="gallery">${c.memoryCards.map((card, i) => (i < unlocked ? `<article><img src="${asset(esc(card.image))}" alt=""><p>${esc(card.caption)}</p></article>` : "<article>🔒<p>Locked memory</p></article>")).join("")}</div><div class="row">${btn("back", "Back to letter")}</div></section>`,
-  );
-  on("back", final);
-}
-gate();
+postcard();
