@@ -2,7 +2,10 @@ import "./style.css";
 import { gsap } from "gsap";
 import { config as c } from "./config";
 
-const asset = (path: string) => import.meta.env.BASE_URL + path;
+declare global {
+  interface Window { postcardAssets?: Record<string, string> }
+}
+const asset = (path: string) => window.postcardAssets?.[path] ?? import.meta.env.BASE_URL + path;
 const esc = (s: string) =>
   s.replace(
     /[&<>"']/g,
@@ -120,6 +123,7 @@ document.documentElement.style.setProperty(
   "--world",
   'url("' + asset("art/world.png") + '")',
 );
+if (typeof FontFace !== "undefined" && document.fonts) {
 const pixelFont = new FontFace(
   "Pixel",
   'url("' + asset("art/pixel.ttf") + '")',
@@ -128,6 +132,7 @@ void pixelFont
   .load()
   .then((f) => document.fonts.add(f))
   .catch(() => {});
+}
 function postcard() {
   show("postcard", `<div class="postcard"><figure class="photocard"><div class="cardline mono"><span>✦ BERRY POST</span><span>♥ ♥ ♥</span></div><div class="portrait-window"><img class="portrait" src="${asset("photos/shivangi.webp")}" alt="Shivangi in a white floral dress"><span class="photo-spark" aria-hidden="true">✦</span></div><figcaption>the birthday girl <span>♡</span></figcaption></figure><section class="wish"><span class="postage" aria-hidden="true"><img src="${asset("art/berry.png")}" alt=""></span><div class="mono to">TO · ${esc(c.friendName.toUpperCase())}</div><h1>HAPPY<br><em>BIRTHDAY,</em><br>${esc(c.friendName.toUpperCase())}!</h1><p class="intro">Of all the nicknames in the world, you gave me Strawberry. So of course your birthday card had to come with a little berry on it.</p><div class="signature">${face()}<div><small class="mono">With love,</small><strong>Your ${esc(c.nickname)}</strong></div></div><div class="wish-actions">${btn("read","Read my letter →")}${btn("candles","Make a wish","secondary")}</div></section></div>`);
   on("read",final);on("candles",candles)
